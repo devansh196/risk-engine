@@ -9,7 +9,7 @@ PORTFOLIO = {
     "INFY.NS":       100_000,  # equity (IT)
     "NIFTYBEES.NS":  150_000,  # Nifty 50 index ETF
     "GOLDBEES.NS":   100_000,  # gold ETF
-    "SETF10GILT.NS": 100_000,  # 5-year government bond ETF
+    "SETF10GILT.NS": 100_000,  # 10-year government bond ETF
     "INR=X":          50_000,  # USD cash, valued in INR (USD/INR rate)
 }
 

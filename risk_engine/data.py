@@ -41,9 +41,11 @@ SPLIT_FACTORS = [2, 3, 4, 5, 10, 20, 25, 50, 100]
 
 
 def fix_unadjusted_splits(prices, threshold=0.5):
-    """Detect and undo stock/ETF splits the data source didn't adjust for.
+    """Detect and undo price-scale errors: unadjusted splits or temporarily mis-scaled prices.
 
     A 1:10 split makes the price drop ~90% overnight, which looks like a crash.
+    Yahoo also sometimes shows a few days at the wrong scale and then reverts
+    (NIFTYBEES and GOLDBEES on 19-20 Dec 2019); the down-jump and up-jump corrections cancel out.
     Rule: if a price falls below half (or more than doubles) in one day, treat it as a
     split, find the closest standard split ratio, and rescale all earlier prices.
     The genuine market move on that day is kept (only the split factor is removed).
@@ -60,8 +62,8 @@ def fix_unadjusted_splits(prices, threshold=0.5):
                 prices.loc[earlier, col] /= k      # split: shrink old prices
             else:
                 prices.loc[earlier, col] *= k      # reverse split: grow old prices
-            print(f"[data fix] {col}: {'1:' if r < 1 else ''}{k}{'' if r < 1 else ':1 reverse'} "
-                  f"split detected on {date.date()} (price ratio {r:.4f}), earlier prices rescaled")
+            print(f"[data fix] {col}: price scale jump x{'1/' if r < 1 else ''}{k} on {date.date()} "
+                  f"(ratio {r:.4f}), corrected")
     return prices
 
 
