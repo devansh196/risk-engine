@@ -7,14 +7,62 @@ import pandas as pd
 CACHE = Path(__file__).resolve().parent.parent / "data"
 
 
-def download_prices(tickers, start, end=None):
-    """Download adjusted close prices from Yahoo Finance."""
+def download_prices(tickers, start, end=None, retries=3):
+    """Download adjusted close prices from Yahoo Finance.
+
+    threads=False avoids yfinance's "database is locked" error on Windows,
+    and any ticker that still fails is retried on its own.
+    """
+    import time
     import yfinance as yf
 
-    raw = yf.download(list(tickers), start=start, end=end,
-                      auto_adjust=True, progress=False)
-    prices = raw["Close"] if isinstance(raw.columns, pd.MultiIndex) else raw[["Close"]]
+    def fetch(tks):
+        raw = yf.download(list(tks), start=start, end=end, auto_adjust=True,
+                          progress=False, threads=False)
+        if raw.empty:
+            return pd.DataFrame()
+        close = raw["Close"]
+        return close if isinstance(close, pd.DataFrame) else close.to_frame(tks[0])
+
+    prices = fetch(tickers)
+    for attempt in range(retries):
+        missing = [t for t in tickers if t not in prices or prices[t].notna().sum() == 0]
+        if not missing:
+            break
+        time.sleep(2)
+        for t in missing:
+            got = fetch([t])
+            if not got.empty and got.iloc[:, 0].notna().any():
+                prices = prices.drop(columns=t, errors="ignore").join(got.iloc[:, :1].set_axis([t], axis=1), how="outer")
     return prices.reindex(columns=list(tickers))
+
+
+SPLIT_FACTORS = [2, 3, 4, 5, 10, 20, 25, 50, 100]
+
+
+def fix_unadjusted_splits(prices, threshold=0.5):
+    """Detect and undo stock/ETF splits the data source didn't adjust for.
+
+    A 1:10 split makes the price drop ~90% overnight, which looks like a crash.
+    Rule: if a price falls below half (or more than doubles) in one day, treat it as a
+    split, find the closest standard split ratio, and rescale all earlier prices.
+    The genuine market move on that day is kept (only the split factor is removed).
+    """
+    prices = prices.copy()
+    for col in prices.columns:
+        s = prices[col].dropna()
+        ratio = s / s.shift(1)
+        for date, r in ratio[(ratio < threshold) | (ratio > 1 / threshold)].items():
+            jump = 1 / r if r < 1 else r
+            k = min(SPLIT_FACTORS, key=lambda f: abs(np.log(f / jump)))
+            earlier = prices.index < date
+            if r < 1:
+                prices.loc[earlier, col] /= k      # split: shrink old prices
+            else:
+                prices.loc[earlier, col] *= k      # reverse split: grow old prices
+            print(f"[data fix] {col}: {'1:' if r < 1 else ''}{k}{'' if r < 1 else ':1 reverse'} "
+                  f"split detected on {date.date()} (price ratio {r:.4f}), earlier prices rescaled")
+    return prices
 
 
 def align_to_calendar(prices, reference):
@@ -34,7 +82,11 @@ def load_prices(tickers, start, end=None, reference=None, refresh=False):
 
     if path.exists() and not refresh:
         prices = pd.read_csv(path, index_col=0, parse_dates=True)
-    else:
+        # If the cache is missing a ticker (e.g. a failed download last time), fetch again.
+        if any(t not in prices or prices[t].notna().sum() <= 250 for t in tickers):
+            print("[info] cached prices incomplete, re-downloading")
+            refresh = True
+    if not path.exists() or refresh:
         prices = download_prices(tickers, start, end)
         if prices.dropna(how="all").empty:
             raise RuntimeError("No prices downloaded. Check your internet connection or the "
@@ -45,7 +97,7 @@ def load_prices(tickers, start, end=None, reference=None, refresh=False):
     good = [t for t in tickers if t in prices and prices[t].notna().sum() > 250]
     for t in set(tickers) - set(good):
         print(f"[warning] dropping {t}: not enough price data")
-    prices = prices[good]
+    prices = fix_unadjusted_splits(prices[good])
 
     if reference in good:
         prices = align_to_calendar(prices, reference)

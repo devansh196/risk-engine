@@ -9,7 +9,7 @@ PORTFOLIO = {
     "INFY.NS":       100_000,  # equity (IT)
     "NIFTYBEES.NS":  150_000,  # Nifty 50 index ETF
     "GOLDBEES.NS":   100_000,  # gold ETF
-    "GILT5YBEES.NS": 100_000,  # 5-year government bond ETF
+    "SETF10GILT.NS": 100_000,  # 5-year government bond ETF
     "INR=X":          50_000,  # USD cash, valued in INR (USD/INR rate)
 }
 
@@ -26,3 +26,7 @@ HORIZONS = [1, 10]          # 1-day VaR and 10-day VaR (10 days = Basel / margin
 MC_SIMULATIONS = 100_000
 MC_T_DOF = 5                # degrees of freedom for the fat-tailed Student-t Monte Carlo
 SEED = 42
+
+# ---------- Day 2: backtesting ----------
+BACKTEST_DAYS = 250         # Basel backtests on the last 250 trading days (~1 year)
+EWMA_LAMBDA = 0.94          # RiskMetrics decay factor: recent days count more

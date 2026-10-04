@@ -1,0 +1,4 @@
+Model,Days,Exceptions,Expected,Exception rate %,Basel zone,Capital multiplier,Kupiec LR,Kupiec p-value,Kupiec result,Indep. LR,Indep. p-value,Indep. result
+Historical (500d),250,5,2.5,2.0,YELLOW,3.4,1.957,0.162,Accept,0.205,0.651,Independent
+Parametric (500d),250,7,2.5,2.8,YELLOW,3.65,5.497,0.019,Reject,0.405,0.525,Independent
+EWMA (lambda=0.94),250,4,2.5,1.6,GREEN,3.0,0.769,0.38,Accept,0.131,0.718,Independent
