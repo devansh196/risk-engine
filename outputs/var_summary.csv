@@ -1,0 +1,5 @@
+Method,VaR 1d,ES 1d,VaR 10d,ES 10d,VaR 1d % of portfolio
+Historical,18528.36,21937.31,58591.82,69371.88,1.85
+Parametric (normal),17002.73,19479.43,53767.37,61599.37,1.70
+Monte Carlo (normal),17068.26,19509.38,53974.57,61694.06,1.71
+"Monte Carlo (Student-t, dof=5)",19115.16,25461.65,60447.43,80516.82,1.91
