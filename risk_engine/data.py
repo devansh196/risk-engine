@@ -67,6 +67,25 @@ def fix_unadjusted_splits(prices, threshold=0.5):
     return prices
 
 
+def drop_market_holidays(prices):
+    """Remove days the Indian market was closed but the data source still has a row for.
+
+    On an NSE holiday (e.g. Gandhi Jayanti, 2 Oct) Yahoo may repeat the previous close
+    for every Indian asset while USD/INR keeps trading. Those fake zero-return days would
+    deflate volatility and VaR, so we drop any day on which no non-FX asset moved.
+    """
+    local = [c for c in prices.columns if not c.upper().endswith("=X")]
+    if not local:
+        return prices
+    unchanged = prices[local].diff().abs().sum(axis=1) == 0
+    unchanged.iloc[0] = False
+    if unchanged.any():
+        days = prices.index[unchanged]
+        print(f"[data fix] dropped {len(days)} market-holiday rows "
+              f"(no Indian asset moved), latest: {days[-1].date()}")
+    return prices[~unchanged]
+
+
 def align_to_calendar(prices, reference):
     """Keep only the reference market's trading days.
 
@@ -103,7 +122,7 @@ def load_prices(tickers, start, end=None, reference=None, refresh=False):
 
     if reference in good:
         prices = align_to_calendar(prices, reference)
-    return prices.dropna()
+    return drop_market_holidays(prices.dropna())
 
 
 def synthetic_prices(tickers, n_days=2500, seed=0):

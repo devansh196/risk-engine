@@ -63,6 +63,15 @@ Data: daily prices from Yahoo Finance, 2016–2026.
 
 ![Initial margin over time](outputs/margin_over_time.png)
 
+### 5. Daily risk & margin report (Excel)
+`run_report.py` produces the morning report a credit risk / exposure management team would circulate, for any date:
+- **Summary:** today vs the previous day for portfolio value, VaR (historical, parametric, EWMA), ES, VaR limit utilisation, initial margin, collateral and excess/shortfall, plus the backtest status.
+- **Auto-generated commentary**, tagged INFO / WARNING / ALERT: what drove the day's P&L, why VaR moved (change in each asset's component VaR), whether recent volatility is elevated (EWMA vs historical), margin calls or a thin collateral cushion, VaR exceptions, and stress loss not covered by collateral.
+- **Sheets:** Positions (P&L and VaR contribution by asset), Margin (calibrations, IM by class, collateral with haircuts), Stress, VaR history (60 days with chart), Backtest.
+- Changes, weights, P&L, totals, utilisation and excess collateral are **live Excel formulas**, so the workbook updates if a number is edited.
+
+Run it for a crisis day to see the alerts fire: `python run_report.py --date 2020-03-23`.
+
 ### Data quality
 NIFTYBEES and GOLDBEES showed prices at the wrong scale (÷10 and ÷100) on 19–20 December 2019, creating a fake 22.6% one-day portfolio loss. The data pipeline now detects price-scale jumps and corrects them. Before the fix, that one bad day had inflated parametric volatility for 500 days and made the model look better than it was.
 
@@ -95,6 +104,8 @@ python run_backtest.py              # backtest the last 250 days
 python run_backtest.py --days 2000  # long backtest including the 2020 COVID crash
 python run_stress.py                # stress tests on today's portfolio
 python run_margin.py                # initial margin, collateral and margin call
+python run_report.py                # daily Excel risk report for the latest date
+python run_report.py --date 2020-03-23   # report for any past date
 ```
 Add `--synthetic` to any script to run offline on fake data, or `--refresh` to re-download prices.
 Prices are cached in `data/prices.csv`; results and charts go to `outputs/`.
@@ -109,9 +120,12 @@ risk_engine/var.py        VaR and ES methods
 risk_engine/backtest.py   rolling VaR, Kupiec, Christoffersen, Basel traffic light
 risk_engine/stress.py     historical and hypothetical stress tests
 risk_engine/margin.py     initial margin, calibration, collateral, margin calls
+risk_engine/report.py     daily snapshot, component VaR and auto-generated commentary
+risk_engine/excel.py      formatted Excel workbook with live formulas and charts
 risk_engine/common.py     shared helpers for the run scripts
 run_var.py                VaR/ES table and P&L distribution chart
 run_backtest.py           backtest table, exception list and chart
 run_stress.py             stress test table and chart
 run_margin.py             initial margin report and IM-over-time chart
+run_report.py             daily Excel risk & margin report
 ```
