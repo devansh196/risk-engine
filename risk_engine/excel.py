@@ -92,7 +92,6 @@ def write_report(path, t, y, asset_pnl, units, bt_summary, bt_daily, stress, his
         ws.cell(row=rows[name], column=1).font = BOLD
 
     r = r_exc + 1
-    pnl_row = r
     ws.cell(row=r, column=1, value="Daily P&L").font = BOLD
     ws.cell(row=r, column=3, value="=Positions!I{}".format(len(units) + 5)).number_format = INR
     r += 1
@@ -235,7 +234,7 @@ def write_report(path, t, y, asset_pnl, units, bt_summary, bt_daily, stress, his
         ws.cell(row=i, column=3, value=f"=MAX(0,-B{i})").number_format = INR
         for col, key in ((4, "Historical VaR"), (5, "Parametric VaR"), (6, "EWMA VaR")):
             ws.cell(row=i, column=col, value=float(row[key])).number_format = INR
-        e = ws.cell(row=i, column=7, value=f'=IF(C{i}>D{i},"YES","")')
+        ws.cell(row=i, column=7, value=f'=IF(C{i}>D{i},"YES","")')
         if row["Exception"]:
             for col in range(1, 8):
                 ws.cell(row=i, column=col).fill = STATUS_FILL["ALERT"]

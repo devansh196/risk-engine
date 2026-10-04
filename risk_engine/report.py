@@ -176,7 +176,7 @@ def commentary(t, y, asset_pnl, bt_summary, today_exception, stress):
     # 4. Margin and collateral
     im_t, im_y = t["im_required"], y["im_required"]
     c_t, c_y = t["collateral_after_haircut"], y["collateral_after_haircut"]
-    excess_t, excess_y = c_t - im_t, c_y - im_y
+    excess_t = c_t - im_t
     text = (f"Initial margin requirement {inr(im_t)} ({'+' if im_t >= im_y else ''}{inr(im_t - im_y)} DoD); "
             f"collateral after haircuts {inr(c_t)} ({'+' if c_t >= c_y else ''}{inr(c_t - c_y)} DoD).")
     if excess_t < 0:

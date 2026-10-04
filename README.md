@@ -11,13 +11,13 @@ Data: daily prices from Yahoo Finance, 2016–2026.
 | Method | 1-day VaR | 1-day ES | 10-day VaR |
 |---|---|---|---|
 | Historical | ₹18,340 | ₹22,013 | ₹57,997 |
-| Parametric (normal) | ₹17,000 | ₹19,477 | ₹53,760 |
-| Monte Carlo (normal) | ₹17,059 | ₹19,516 | ₹53,945 |
-| Monte Carlo (Student-t, 5 dof) | ₹19,154 | ₹25,461 | ₹60,571 |
+| Parametric (normal) | ₹17,064 | ₹19,550 | ₹53,962 |
+| Monte Carlo (normal) | ₹17,130 | ₹19,590 | ₹54,170 |
+| Monte Carlo (Student-t, 5 dof) | ₹19,250 | ₹25,558 | ₹60,873 |
 
 - Parametric and normal Monte Carlo agree, as they should: both assume normal returns.
 - Historical VaR and ES sit above the normal models, so real returns have fatter tails than a normal distribution.
-- Diversification cuts risk by **38%**: standalone VaRs sum to ₹27,473 against a portfolio VaR of ₹17,000.
+- Diversification cuts risk by **38%**: standalone VaRs sum to ₹27,566 against a portfolio VaR of ₹17,064.
 
 ![P&L distribution](outputs/pnl_distribution.png)
 
@@ -26,7 +26,7 @@ Data: daily prices from Yahoo Finance, 2016–2026.
 |---|---|---|---|---|---|
 | Historical (500d) | 5 exceptions | Yellow | 26 | Pass | Fail (clustered) |
 | Parametric (500d) | 7 exceptions | Yellow | 35 | Fail | Fail (clustered) |
-| EWMA (λ = 0.94) | 4 exceptions | Green | 35 | Fail | Pass |
+| EWMA (λ = 0.94) | 2 exceptions | Green | 32 | Fail | Pass |
 
 - Each model fails a different test. Historical VaR gets the exception count right but lags in a crisis (exceptions on 16, 17 and 18 March 2020 in a row). EWMA reacts fast enough to remove clustering but, assuming normal returns, breaches too often.
 - Combining the two (filtered historical simulation) would address both weaknesses.
@@ -45,7 +45,7 @@ Data: daily prices from Yahoo Finance, 2016–2026.
 | Russia–Ukraine war (Jan – Mar 2022) | ₹83,215 | 8.3% | 1.4× |
 
 - The worst real 10-day loss was 3.6× the 99% 10-day VaR. VaR says how often a loss is exceeded, not by how much.
-- In the COVID crash gold *fell* and bonds were flat: hedges offset under 1% of the loss, because correlations converge in a panic. The same gold position did hedge in 2018, 2022 and 2024–25.
+- In the COVID crash the hedges failed: gold *fell*, bonds were flat and USD barely rose, so together they lost ₹2,368 on top of a ₹2.60 lakh equity loss. Correlations converge in a panic. The same gold position did hedge in 2018, 2022 and 2024–25.
 - Reliance is the biggest loser in every scenario, a sign of single-name concentration (20% of the portfolio).
 
 ![Stress tests](outputs/stress_scenarios.png)
@@ -70,10 +70,16 @@ Data: daily prices from Yahoo Finance, 2016–2026.
 - **Sheets:** Positions (P&L and VaR contribution by asset), Margin (calibrations, IM by class, collateral with haircuts), Stress, VaR history (60 days with chart), Backtest.
 - Changes, weights, P&L, totals, utilisation and excess collateral are **live Excel formulas**, so the workbook updates if a number is edited.
 
-Run it for a crisis day to see the alerts fire: `python run_report.py --date 2020-03-23`.
+Example, the report for **23 March 2020** (`python run_report.py --date 2020-03-23`):
+- Daily loss of ₹90,348 (−8.3%), led by Reliance (−13.2%): a VaR exception at 3.1× the previous day's VaR.
+- VaR limit breached at 139% utilisation; EWMA VaR (₹73,913) more than double historical VaR (₹34,675), showing the 2-year window lagging the crash.
+- Initial margin of ₹1,53,420 against ₹94,300 of collateral: a **₹59,120 margin call**.
+- 9 exceptions in the last 250 days (yellow zone, one away from red).
 
 ### Data quality
-NIFTYBEES and GOLDBEES showed prices at the wrong scale (÷10 and ÷100) on 19–20 December 2019, creating a fake 22.6% one-day portfolio loss. The data pipeline now detects price-scale jumps and corrects them. Before the fix, that one bad day had inflated parametric volatility for 500 days and made the model look better than it was.
+Two problems in the source data were found and fixed in the pipeline:
+- **Price-scale errors:** NIFTYBEES and GOLDBEES showed prices at the wrong scale (÷10 and ÷100) on 19–20 December 2019, creating a fake 22.6% one-day portfolio loss. Before the fix, that one bad day had inflated parametric volatility for 500 days and made the model look better than it was. The pipeline now detects and corrects price-scale jumps.
+- **Market-holiday rows:** on NSE holidays (e.g. Gandhi Jayanti, 2 October) Yahoo repeats the previous close for Indian assets while USD/INR keeps trading. These fake zero-return days deflate volatility, so days on which no Indian asset moved are dropped.
 
 ## Methods
 | Method | Idea | Strength | Weakness |
@@ -95,6 +101,8 @@ NIFTYBEES and GOLDBEES showed prices at the wrong scale (÷10 and ÷100) on 19�
 - The bond ETF trades thinly (12.8% of days show no price change), which understates its risk.
 - Data starts in 2016, so 2008 is a hypothetical scenario rather than a historical replay.
 - Positions are held fixed in INR; no intraday moves, transaction costs or liquidity effects.
+- Collateral is held fixed: margin calls are reported but not assumed to be met, so a shortfall can persist across days in the daily report.
+- Component VaR (VaR contribution by asset) is based on the parametric model, so it adds up to parametric rather than historical VaR.
 
 ## How to run
 ```bash

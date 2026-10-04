@@ -40,7 +40,8 @@ def main():
     asset_pnl = units * (t["prices"] - y["prices"])
     pnl_series, history = var_history(prices, units)
     bt_summary, bt_daily = backtest_status(pnl_series)
-    today_exception = bool(bt_daily["exception"].iloc[-1]) if bt_daily.index[-1] == d_t else False
+    # Exception = today's actual P&L (units held over T-1 -> T) beyond yesterday's VaR.
+    today_exception = bool(asset_pnl.sum() < -y["hist_var"])
     stress = stress_table(prices, t["mv"].to_dict())
     by_class, _ = im_by_asset_class(prices, t["mv"].to_dict(), S.MPOR, S.IM_CONFIDENCE, S.IM_RECENT_WINDOW)
 
