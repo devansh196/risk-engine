@@ -1,0 +1,12 @@
+Scenario,Type,Period,P&L,% of portfolio,x 10d VaR,Biggest loser
+2008-style crisis,Hypothetical,,-279500.00,-27.95,4.82,"RELIANCE.NS (Rs -80,000)"
+COVID-19 crash (Feb-Mar 2020),Historical,2020-02-19 to 2020-03-23,-262425.79,-26.24,4.52,"RELIANCE.NS (Rs -82,425)"
+Worst 10 days in history,Historical,2020-03-06 to 2020-03-23,-211407.70,-21.14,3.65,"RELIANCE.NS (Rs -60,889)"
+Equity crash -20%,Hypothetical,,-140500.00,-14.05,2.42,"RELIANCE.NS (Rs -40,000)"
+Hedges fail (everything falls),Hypothetical,,-130000.00,-13.00,2.24,"RELIANCE.NS (Rs -30,000)"
+FPI sell-off (Sep 2024-Mar 2025),Historical,2024-09-26 to 2025-03-03,-90626.62,-9.06,1.56,"RELIANCE.NS (Rs -43,620)"
+Rate shock (+150bp yields),Hypothetical,,-88500.00,-8.85,1.53,"RELIANCE.NS (Rs -20,000)"
+IL&FS crisis (Aug-Oct 2018),Historical,2018-08-28 to 2018-10-26,-87264.57,-8.73,1.50,"RELIANCE.NS (Rs -41,562)"
+Russia-Ukraine war (Jan-Mar 2022),Historical,2022-01-17 to 2022-03-07,-83215.25,-8.32,1.43,"RELIANCE.NS (Rs -24,504)"
+Election result day (4 Jun 2024),Historical,2024-06-03 to 2024-06-04,-29738.03,-2.97,0.51,"RELIANCE.NS (Rs -14,970)"
+Yen carry-trade unwind (Aug 2024),Historical,2024-08-01 to 2024-08-05,-29656.89,-2.97,0.51,"RELIANCE.NS (Rs -8,972)"
